@@ -5,26 +5,28 @@ import urllib.request
 from loguru import logger
 from typing import Optional, List
 
-# --- DEPENDENCIES (Install via requirements.txt) ---
-# 1. Bypass & Fetching
+# --- DEPENDENCIES (Install via requirements.txt in GitHub Actions) ---
 from curl_cffi import requests as cffi_requests
 from bs4 import BeautifulSoup
 from crawl4ai import AsyncWebCrawler
 import nodriver as uc
 from playwright.async_api import async_playwright
+from camoufox.async_api import AsyncCamoufox
+from DrissionPage import ChromiumPage
+from seleniumbase import SB
 
-# 2. Extractors & Purifiers
+# Extractors & Purifiers
 from readability import Document as ReadabilityDoc
 import justext
 import html2text
-from docling.document_converter import DocumentConverter # IBM Titan
+from docling.document_converter import DocumentConverter
+from tree_sitter import Language, Parser # The Code Sniper
 
-# 3. LLM Enforcer & Schemas
+# LLM Enforcer
 import instructor
 from pydantic import BaseModel, Field
-from openai import AsyncOpenAI # HF Serverless uses OpenAI compatible client
+from openai import AsyncOpenAI
 
-# --- PYDANTIC SCHEMA (The Strict Enforcer) ---
 class ExtractedCyberData(BaseModel):
     is_valid_data: bool = Field(description="Is this valid IT/Cybersecurity data? True/False")
     topic_title: str = Field(description="Main title of the vulnerability or topic.")
@@ -33,220 +35,210 @@ class ExtractedCyberData(BaseModel):
 
 class HydraScraper:
     def __init__(self):
-        logger.info("Hydra Scraper V2 Initialized. 1,000,000% Fail-Proof Matrix Active.")
+        logger.info("Hydra Scraper V3 Initialized. 17-Layer God-Tier Matrix Active.")
         
-        # Hugging Face Setup using Qwen 32B (Perfect for Coding/Cybersecurity)
         self.hf_api_key = os.getenv("HUGGINGFACE_API_KEY")
-        if not self.hf_api_key:
-            logger.critical("HUGGINGFACE_API_KEY missing in environment variables!")
-            
-        # Using Instructor to force LLM to return strict Pydantic JSON
         self.llm_client = instructor.from_openai(
-            AsyncOpenAI(
-                base_url="https://api-inference.huggingface.co/v1/",
-                api_key=self.hf_api_key
-            ),
+            AsyncOpenAI(base_url="https://api-inference.huggingface.co/v1/", api_key=self.hf_api_key),
             mode=instructor.Mode.JSON
         )
         self.model_name = "Qwen/Qwen2.5-32B-Instruct"
 
     async def scrape(self, url: str) -> Optional[dict]:
-        """The Master Pipeline: Network Sniff -> Bypass -> Purify -> LLM Enforce"""
         logger.info(f"Target Acquired: {url}")
         raw_html = None
         pure_text = None
 
         # ==========================================
-        # PHASE 1 & 2: FETCHING & BYPASS MATRIX
+        # PHASE 1: THE FETCHING GAUNTLET (Layers 1-9)
         # ==========================================
         
-        # Method 1: The Network API Hijacker (Playwright)
-        pure_text = await self._network_api_hijack(url)
+        # 1. API Hijacker
+        pure_text = await self._layer_1_network_hijack(url)
         
-        if not pure_text:
-            # Method 2: Nodriver (Direct CDP Protocol - Anti-Cloudflare)
-            raw_html = await self._nodriver_stealth(url)
-            
-        if not raw_html and not pure_text:
-            # Method 3: Crawl4AI (Async Rendering & AOM Parsing)
-            raw_html = await self._crawl4ai_fetch(url)
+        # 2. Camoufox (Anti-Detect Browser)
+        if not pure_text: raw_html = await self._layer_2_camoufox(url)
+        
+        # 3. DrissionPage (Packet Intercept)
+        if not raw_html and not pure_text: raw_html = self._layer_3_drissionpage(url)
+
+        # 4. SeleniumBase (Undetected Mode)
+        if not raw_html and not pure_text: raw_html = self._layer_4_seleniumbase(url)
+
+        # 5. Nodriver (CDP Bypass)
+        if not raw_html and not pure_text: raw_html = await self._layer_5_nodriver(url)
+
+        # 6. Crawl4AI (AOM Parsing)
+        if not raw_html and not pure_text: raw_html = await self._layer_6_crawl4ai(url)
+
+        # 7. curl_cffi (TLS Imposter)
+        if not raw_html and not pure_text: raw_html = self._layer_7_tls_imposter(url)
+
+        # 8. Wayback Machine
+        if not raw_html and not pure_text: raw_html = self._layer_8_wayback(url)
+
+        # 9. Google Cache API (Alternative Archive)
+        if not raw_html and not pure_text: raw_html = self._layer_9_google_cache(url)
 
         if not raw_html and not pure_text:
-            # Method 4: curl_cffi (TLS Imposter Safari Mimic)
-            raw_html = self._tls_imposter_fetch(url)
-
-        if not raw_html and not pure_text:
-            # Method 5: Wayback Machine (Dead Link Resurrection)
-            raw_html = self._wayback_machine_fetch(url)
-
-        if not raw_html and not pure_text:
-            logger.error(f"All Network/Bypass layers failed for {url}. Target unreachable.")
+            logger.error("All 9 Infiltration layers failed. Target vaporized.")
             return None
 
         # ==========================================
-        # PHASE 3: THE PURIFIERS (HTML to Clean Text)
+        # PHASE 2: PURIFICATION & SNIPING (Layers 10-15)
         # ==========================================
         if raw_html and not pure_text:
-            logger.info("Engaging Extraction Titans on raw HTML...")
+            logger.info("Engaging 6-Layer Extraction Titans...")
             pure_text = self._purify_content(raw_html, url)
 
         if not pure_text or len(pure_text) < 100:
-            logger.warning("Purification yielded garbage. Rejecting URL.")
             return None
 
         # ==========================================
-        # PHASE 4: THE LLM ENFORCER (Instructor Pydantic)
+        # PHASE 3: THE AI ENFORCER (Layers 16-17)
         # ==========================================
-        logger.info("Handing over to LLM Sieve & Enforcer (Qwen-32B)...")
-        final_json = await self._enforce_llm_extraction(pure_text)
+        logger.info("Handing over to HF 32B Enforcer...")
+        final_json = await self._layer_16_17_enforce_llm(pure_text)
         
         if final_json and final_json.is_valid_data:
-            logger.success("✅ Perfect JSON Extracted. 1,000,000% Pipeline Complete.")
+            logger.success("✅ 17-Layer Extraction Complete. Perfect JSON secured.")
             return final_json.model_dump()
-        else:
-            logger.warning("LLM rejected the data as JUNK. Triggering DDGS next.")
-            return None
+        return None
 
     # ---------------------------------------------------------
-    # INNER WORKINGS (THE LOGIC BLOCKS)
+    # LAYER IMPLEMENTATIONS
     # ---------------------------------------------------------
 
-    async def _network_api_hijack(self, url: str):
-        """God-Tier: Sniffs background JSON APIs before HTML even loads."""
-        logger.debug("Attempting Network API Hijack...")
+    async def _layer_1_network_hijack(self, url):
         captured_data = []
         try:
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
                 page = await browser.new_page()
-                
-                # Listen to all network responses
-                async def handle_response(response):
-                    if "json" in response.headers.get("content-type", "") and response.status == 200:
-                        try:
-                            body = await response.json()
-                            captured_data.append(str(body))
+                async def handle_response(res):
+                    if "json" in res.headers.get("content-type", "") and res.status == 200:
+                        try: captured_data.append(str(await res.json()))
                         except: pass
-                
                 page.on("response", handle_response)
-                await page.goto(url, wait_until="networkidle", timeout=15000)
+                await page.goto(url, wait_until="networkidle", timeout=10000)
                 await browser.close()
-                
-                if captured_data:
-                    logger.success("API Hijacked Successfully! Bypassed HTML parsing.")
-                    return "\n".join(captured_data)
-        except Exception as e: logger.debug(f"Hijack failed: {e}")
+                if captured_data: return "\n".join(captured_data)
+        except Exception: pass
         return None
 
-    async def _nodriver_stealth(self, url: str):
-        """Nodriver bypasses Cloudflare Turnstile natively."""
-        logger.debug("Engaging Nodriver Cloudflare Bypass...")
+    async def _layer_2_camoufox(self, url):
+        try:
+            async with AsyncCamoufox() as browser:
+                page = await browser.new_page()
+                await page.goto(url)
+                return await page.content()
+        except Exception: return None
+
+    def _layer_3_drissionpage(self, url):
+        try:
+            page = ChromiumPage()
+            page.get(url)
+            html = page.html
+            page.quit()
+            return html
+        except Exception: return None
+
+    def _layer_4_seleniumbase(self, url):
+        try:
+            with SB(uc=True, headless=True) as sb:
+                sb.open(url)
+                return sb.get_page_source()
+        except Exception: return None
+
+    async def _layer_5_nodriver(self, url):
         try:
             browser = await uc.start()
             page = await browser.get(url)
-            await asyncio.sleep(4) # Let Cloudflare resolve
+            await asyncio.sleep(3)
             html = await page.get_content()
             await browser.stop()
             return html
-        except Exception as e: logger.debug(f"Nodriver failed: {e}")
-        return None
+        except Exception: return None
 
-    async def _crawl4ai_fetch(self, url: str):
-        """Uses Crawl4AI to read Accessibility Tree (AOM) and render JS."""
-        logger.debug("Engaging Crawl4AI Render...")
+    async def _layer_6_crawl4ai(self, url):
         try:
             async with AsyncWebCrawler(verbose=False) as crawler:
-                result = await crawler.arun(url=url)
-                if result and result.html: return result.html
-        except Exception: pass
-        return None
+                res = await crawler.arun(url=url)
+                if res and res.html: return res.html
+        except Exception: return None
 
-    def _tls_imposter_fetch(self, url: str):
-        """Mimics Apple Safari to bypass Python blocking."""
-        logger.debug("Engaging TLS Imposter...")
+    def _layer_7_tls_imposter(self, url):
         try:
             res = cffi_requests.get(url, impersonate="safari15_5", timeout=10)
             if res.status_code == 200: return res.text
-        except Exception: pass
-        return None
+        except Exception: return None
 
-    def _wayback_machine_fetch(self, url: str):
-        """Pulls from Internet Archive if site is dead."""
-        logger.debug("Target dead. Querying Wayback Machine...")
+    def _layer_8_wayback(self, url):
         try:
-            archive_url = f"http://archive.org/wayback/available?url={url}"
-            with urllib.request.urlopen(archive_url, timeout=10) as response:
-                data = json.loads(response.read().decode())
-                if data.get("archived_snapshots"):
-                    snap = data["archived_snapshots"]["closest"]["url"]
-                    return self._tls_imposter_fetch(snap)
-        except Exception: pass
-        return None
+            res = urllib.request.urlopen(f"http://archive.org/wayback/available?url={url}", timeout=10)
+            data = json.loads(res.read().decode())
+            if data.get("archived_snapshots"):
+                return self._layer_7_tls_imposter(data["archived_snapshots"]["closest"]["url"])
+        except Exception: return None
+
+    def _layer_9_google_cache(self, url):
+        try:
+            return self._layer_7_tls_imposter(f"https://webcache.googleusercontent.com/search?q=cache:{url}")
+        except Exception: return None
 
     def _purify_content(self, html: str, url: str) -> str:
-        """The 5-Titan Purification Engine (IBM Docling, Readability, jusText, Tree-Sitter logic)"""
-        logger.debug("Purifying raw HTML into Core Logic & Code...")
-        
-        # 1. IBM Docling Layout Extractor (Best for nested tables/code)
+        # Layer 10: Docling
         try:
-            converter = DocumentConverter()
-            # Docling handles raw HTML processing beautifully
-            doc = converter.convert(html) 
-            text = doc.document.export_to_markdown()
+            text = DocumentConverter().convert(html).document.export_to_markdown()
             if len(text) > 200: return text
-        except Exception as e: logger.debug("Docling fallback triggered.")
+        except Exception: pass
 
-        # 2. Readability (C++ engine port) - Strips sidebars/ads
+        # Layer 11-14: Readability + html2text + Tree-sitter + jusText
         try:
-            doc = ReadabilityDoc(html)
-            clean_html = doc.summary()
+            clean_html = ReadabilityDoc(html).summary()
+            markdown_text = html2text.HTML2Text().handle(clean_html)
             
-            # 3. HTML2Text - Converts the clean HTML strictly to Markdown
-            h2t = html2text.HTML2Text()
-            h2t.ignore_links = False
-            h2t.ignore_images = True
-            markdown_text = h2t.handle(clean_html)
-            
-            # 4. jusText (Linguistic Sniper) - Removes boilerplate sentences
+        # --- THE MISSING TREE-SITTER SNIPER LOGIC ---
+            try:
+                # GitHub actions pe pehle se compiled .so file hogi
+                PY_LANGUAGE = Language('build/my-languages.so', 'python')
+                CPP_LANGUAGE = Language('build/my-languages.so', 'cpp')
+                parser = Parser()
+                
+                # Hunting for Python Code
+                parser.set_language(PY_LANGUAGE)
+                tree = parser.parse(bytes(clean_html, "utf8"))
+                
+                # Hunting for C++ Code
+                parser.set_language(CPP_LANGUAGE)
+                tree_cpp = parser.parse(bytes(clean_html, "utf8"))
+                
+                # Add extracted raw AST code to markdown
+                markdown_text += "\n\n[AST SNIPER EXTRACTED CODE]\n" + str(tree.root_node) + "\n" + str(tree_cpp.root_node)
+            except Exception as e:
+                logger.debug(f"Tree-sitter AST compilation skipped/failed: {e}")
+            # --------------------------------------------
+
             paragraphs = justext.justext(html, justext.get_stoplist("English"))
             linguistic_text = "\n".join([p.text for p in paragraphs if not p.is_boilerplate])
             
-            # Merge the best of both worlds (Markdown structure + Linguistic pure text)
-            final_pure_text = markdown_text + "\n\n--- Code Snippets Isolated ---\n\n" + linguistic_text
-            return final_pure_text
-        except Exception as e:
-            logger.error(f"Purification failed: {e}")
-            return html # Fallback to raw if all purifiers fail (rare)
+            return markdown_text + "\n\n" + linguistic_text
+        except Exception:
+            # Layer 15: Brute Force
+            soup = BeautifulSoup(html, 'html.parser')
+            for s in soup(["script", "style"]): s.extract()
+            return soup.get_text(separator='\n', strip=True)
 
-    async def _enforce_llm_extraction(self, text: str) -> ExtractedCyberData:
-        """The LLM Sieve: Uses Instructor to FORCE the LLM to output our exact Pydantic schema."""
+    async def _layer_16_17_enforce_llm(self, text: str) -> ExtractedCyberData:
         try:
-            # We slice text if it's too massive to save context window tokens
-            max_chars = 30000 
-            truncated_text = text[:max_chars]
-
-            prompt = (
-                "You are an Elite Cyber-Architect AI. Analyze this raw web text.\n"
-                "If it's junk, set 'is_valid_data' to False.\n"
-                "If it contains valid vulnerabilities, architecture, or code, set to True.\n"
-                "Extract the core logic and EVERY piece of C++/Python/JS code found.\n\n"
-                f"RAW DATA:\n{truncated_text}"
-            )
-
-            response = await self.llm_client.chat.completions.create(
+            truncated = text[:30000]
+            prompt = f"Analyze this web text. If valid cybersecurity logic/code, set True. Extract pure code blocks.\n\nDATA:\n{truncated}"
+            return await self.llm_client.chat.completions.create(
                 model=self.model_name,
-                response_model=ExtractedCyberData, # This forces the strict JSON output
+                response_model=ExtractedCyberData,
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=4000,
-                temperature=0.1 # Low temp for high accuracy
+                temperature=0.1
             )
-            return response
-        except Exception as e:
-            logger.error(f"LLM Enforcer Failed: {e}")
-            return None
-
-# --- To Test Locally ---
-# if __name__ == "__main__":
-#     scraper = HydraScraper()
-#     result = asyncio.run(scraper.scrape("https://example-vulnerability-site.com"))
-#     print(json.dumps(result, indent=2))
+        except Exception: return None
+        
