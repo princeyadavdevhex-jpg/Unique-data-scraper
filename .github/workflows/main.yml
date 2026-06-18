@@ -1,0 +1,89 @@
+name: Nexus Data Engine - Matrix Runner
+
+# Trigger System
+on:
+  workflow_dispatch: 
+  schedule:
+    - cron: '0 */12 * * *' 
+
+permissions:
+  contents: write
+
+jobs:
+  execute-matrix:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 📦 Install Core Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -U "huggingface_hub[cli]"
+          
+      - name: 🎭 Install Playwright Browsers (For API Hijacker)
+        run: |
+          playwright install chromium
+          playwright install-deps
+
+      - name: 🖥️ Install Virtual Display (For Nodriver Stealth)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+
+      - name: 🌲 Compile Tree-Sitter AST Sniper (C++ & Python)
+        run: |
+          echo "Cloning Tree-Sitter Language Grammars..."
+          mkdir -p vendor build
+          cd vendor
+          git clone https://github.com/tree-sitter/tree-sitter-python.git
+          git clone https://github.com/tree-sitter/tree-sitter-cpp.git
+          cd ..
+          
+          echo "Building Shared Object (.so) Library..."
+          python -c "
+          from tree_sitter import Language
+          Language.build_library('build/my-languages.so', ['vendor/tree-sitter-python', 'vendor/tree-sitter-cpp'])
+          print('✅ Tree-sitter sniper weapon compiled successfully!')
+          "
+
+      - name: 🚀 ENGAGE NEXUS MASTER PIPELINE (5.5 Hours Limit)
+        env:
+          HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
+        run: |
+          echo "Initiating 17-Layer Data Engine with Virtual Display..."
+          xvfb-run -a timeout 330m python main_pipeline.py || true
+
+      - name: 🤗 Push Dual-Data to Hugging Face Hub
+        env:
+          HF_TOKEN: ${{ secrets.HUGGINGFACE_API_KEY }}
+        run: |
+          echo "Uploading deeply nested folders to Hugging Face nexus-intel-vault..."
+          # EXACT REPO PATH UPDATED HERE BASED ON SCREENSHOT
+          huggingface-cli upload prince-yadav-dev-hex/nexus-intel-vault ./data/bronze_vault / --repo-type dataset --private
+
+      - name: 💾 Commit & Push to GitHub Vault
+        run: |
+          echo "Configuring Git Identity..."
+          git config --global user.name "Nexus Autonomous Bot"
+          git config --global user.email "bot@nexus.ecosystem"
+          
+          echo "Staging Data (URLs and JSONs)..."
+          git add data/
+          
+          if ! git diff-index --quiet HEAD; then
+            echo "Changes detected. Pushing to GitHub vault..."
+            git commit -m "🤖 Auto-Vault: Deep-nested Raw & Purified Data synced [skip ci]"
+            git push
+          else
+            echo "No new valid data found in this run. Skipping commit."
+          fi
+          
