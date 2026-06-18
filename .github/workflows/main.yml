@@ -67,8 +67,8 @@ jobs:
           HF_TOKEN: ${{ secrets.HUGGINGFACE_API_KEY }}
         run: |
           echo "Uploading deeply nested folders to Hugging Face nexus-intel-vault..."
-          # EXACT REPO PATH UPDATED HERE BASED ON SCREENSHOT
-          huggingface-cli upload prince-yadav-dev-hex/nexus-intel-vault ./data/bronze_vault / --repo-type dataset --private
+          hf upload prince-yadav-dev-hex/nexus-intel-vault ./data/bronze_vault / --repo-type dataset
+          
 
       - name: 💾 Commit & Push to GitHub Vault
         run: |
