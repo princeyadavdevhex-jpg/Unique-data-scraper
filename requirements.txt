@@ -13,7 +13,8 @@ readability-lxml
 justext
 html2text
 docling
-tree-sitter
+tree-sitter==0.21.3
+
 
 # AI & Enforcement Validation
 instructor
