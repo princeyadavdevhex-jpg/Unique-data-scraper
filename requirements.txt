@@ -1,0 +1,26 @@
+# Fetching & Scraper Core
+curl_cffi
+beautifulsoup4
+crawl4ai
+nodriver
+playwright
+camoufox
+DrissionPage
+seleniumbase
+
+# Purifiers & Extractors
+readability-lxml
+justext
+html2text
+docling
+tree-sitter
+
+# AI & Enforcement Validation
+instructor
+pydantic
+openai
+
+# Utils
+loguru
+duckduckgo-search
+
