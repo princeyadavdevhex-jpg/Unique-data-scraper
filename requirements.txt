@@ -23,5 +23,5 @@ openai
 
 # Utils
 loguru
-duckduckgo-search
+ddgs
 
