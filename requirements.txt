@@ -23,5 +23,4 @@ openai
 
 # Utils
 loguru
-ddgs
-
+duckduckgo-search==5.3.1
