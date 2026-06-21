@@ -1,1 +1,0 @@
-https://raw.githubusercontent.com/offensive-security/exploitdb/master/exploits/linux/local/40839.c
